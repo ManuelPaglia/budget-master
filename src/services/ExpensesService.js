@@ -41,7 +41,7 @@ export async function fetchExpensesData() {
       };
     });
 
-    return tempExpenses;
+    return [records2,tempExpenses];
   } catch (error) {
     console.error("Failed to fetch expenses data:", error);
     throw error;

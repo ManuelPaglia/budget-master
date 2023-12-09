@@ -67,8 +67,9 @@ export default function NextUiTable() {
     const fetchData = async () => {
       try {
         // Make the API call to fetch the row data
-        const tempExpanses = await fetchExpensesData();
-        setRows(tempExpanses);
+        const res = await fetchExpensesData();
+        setCategories(res[0]);
+        setRows(res[1]);
       } catch (error) {
         // Handle the error
         console.error("Failed to fetch row data:", error);

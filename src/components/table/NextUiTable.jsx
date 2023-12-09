@@ -13,28 +13,42 @@ import {
   DropdownMenu,
   DropdownItem,
   Pagination,
+  Tooltip,
+  Modal,
+  useDisclosure,
 } from "@nextui-org/react";
-import { PlusIcon } from "../assets/PlusIcon";
-import { VerticalDotsIcon } from "../assets/VerticalDotsIcon";
-import { SearchIcon } from "../assets/SearchIcon";
-import { ChevronDownIcon } from "../assets/ChevronDownIcon";
-import { columns } from "../data/data";
-import { capitalize } from "../utils/utils";
+import { PlusIcon } from "../../assets/PlusIcon";
+import { SearchIcon } from "../../assets/SearchIcon";
+import { ChevronDownIcon } from "../../assets/ChevronDownIcon";
+import { columns } from "../../data/data";
+import { capitalize } from "../../utils/utils";
+import { EditIcon } from "../../assets/EditIcon";
+import { EyeIcon } from "../../assets/EyeIcon";
+import { DeleteIcon } from "../../assets/DeleteIcon";
+import { Toaster, toast } from "react-hot-toast";
+import { CustomModalBody } from "./CustomModalBody";
+import { pb } from "../../services/pocketbase";
+import { fetchExpensesData } from "../../services/ExpensesService";
 
 const INITIAL_VISIBLE_COLUMNS = ["causal", "amount", "actions"];
 
-export default function NextUiTable({ categories, expenses }) {
+export default function NextUiTable() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
+  const [categories, setCategories] = useState([]);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [modalContent, setModalContent] = React.useState({});
+  const [modalType, setModalType] = React.useState("detail");
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: "amount",
     direction: "ascending",
   });
   const [page, setPage] = React.useState(1);
+  const [rows, setRows] = React.useState([]);
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -49,8 +63,23 @@ export default function NextUiTable({ categories, expenses }) {
 
   useEffect(() => {}, [pages]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Make the API call to fetch the row data
+        const tempExpanses = await fetchExpensesData();
+        setRows(tempExpanses);
+      } catch (error) {
+        // Handle the error
+        console.error("Failed to fetch row data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...expenses];
+    let filteredUsers = [...rows];
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
@@ -59,7 +88,7 @@ export default function NextUiTable({ categories, expenses }) {
     }
 
     return filteredUsers;
-  }, [expenses, filterValue]);
+  }, [rows, filterValue]);
 
   pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -80,37 +109,78 @@ export default function NextUiTable({ categories, expenses }) {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((user, columnKey) => {
-    const cellValue = user[columnKey];
+  const renderCell = React.useCallback(
+    (expense, columnKey) => {
+      const cellValue = expense[columnKey];
 
-    switch (columnKey) {
-      case "amount":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{cellValue} €</p>
-          </div>
-        );
-      case "actions":
-        return (
-          <div className="relative flex justify-end items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="light">
-                  <VerticalDotsIcon className="text-default-300" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
-                <DropdownItem>Edit</DropdownItem>
-                <DropdownItem>Delete</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue;
+      switch (columnKey) {
+        case "amount":
+          return (
+            <div className="flex flex-col">
+              <p className="text-bold text-small capitalize">{cellValue} €</p>
+            </div>
+          );
+        case "actions":
+          return (
+            <div className="relative flex items-center gap-2">
+              <Tooltip content="Details" color="primary">
+                <span
+                  className="text-lg text-primary cursor-pointer active:opacity-50"
+                  onClick={() => handleInfoCell(expense)}
+                >
+                  <EyeIcon color />
+                </span>
+              </Tooltip>
+              <Tooltip content="Edit user">
+                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                  <EditIcon />
+                </span>
+              </Tooltip>
+              <Tooltip color="danger" content="Delete user">
+                <span
+                  className="text-lg text-danger cursor-pointer active:opacity-50"
+                  onClick={() => handleDeleteRow(expense.id)}
+                >
+                  <DeleteIcon />
+                </span>
+              </Tooltip>
+            </div>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    [rows]
+  );
+
+  const handleInfoCell = (item) => {
+    setModalType("detail");
+    setModalContent(item);
+    onOpen();
+  };
+
+  const handleInsertExpens = () => {
+    setModalType("insert");
+    // setModalContent(item);
+    onOpen();
+  };
+
+  const handleDeleteRow = async (id) => {
+    setModalContent({});
+    try {
+      await pb.collection("expenses").delete(id);
+      toast.success("Eliminazione effettuata con successo", {
+        style: { marginBottom: "12vh" },
+      });
+
+      const newRows = rows.filter((row) => row.id !== id);
+      setRows(newRows);
+    } catch (error) {
+      toast.error("Errore durante l' eliminazione, riprovare piu tardi", {
+        style: { marginBottom: "12vh" },
+      });
     }
-  }, []);
+  };
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {
@@ -182,14 +252,18 @@ export default function NextUiTable({ categories, expenses }) {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
+            <Button
+              color="primary"
+              endContent={<PlusIcon />}
+              onPress={handleInsertExpens}
+            >
               Add New
             </Button>
           </div>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
-            Total {expenses.length} expenses
+            Total {rows.length} expenses
           </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
@@ -209,7 +283,7 @@ export default function NextUiTable({ categories, expenses }) {
     filterValue,
     visibleColumns,
     onRowsPerPageChange,
-    expenses.length,
+    rows.length,
     onSearchChange,
     hasSearchFilter,
   ]);
@@ -228,7 +302,7 @@ export default function NextUiTable({ categories, expenses }) {
           showShadow
           color="primary"
           page={page}
-          total={2}
+          total={pages}
           onChange={setPage}
         />
         <div className="hidden sm:flex w-[30%] justify-end gap-2">
@@ -282,7 +356,7 @@ export default function NextUiTable({ categories, expenses }) {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No users found"} items={sortedItems}>
+        <TableBody emptyContent={"No expanses found"} items={sortedItems}>
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
@@ -292,6 +366,15 @@ export default function NextUiTable({ categories, expenses }) {
           )}
         </TableBody>
       </Table>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
+        <CustomModalBody
+          categories={categories}
+          modalContent={modalContent}
+          modalType={modalType}
+          onClose={onclose}
+        />
+      </Modal>
+      <Toaster position="top-center" reverseOrder={false} />
     </div>
   );
 }

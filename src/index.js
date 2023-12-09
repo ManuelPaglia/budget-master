@@ -1,6 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
@@ -11,6 +15,7 @@ import AccessPage from "./pages/AccessPage";
 import HomePage from "./pages/HomePage";
 import TablePage from "./pages/TablePage";
 import GraphicPage from "./pages/GraphicPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const router = createBrowserRouter([
   {
@@ -35,14 +40,22 @@ const router = createBrowserRouter([
     path: "/access",
     element: <AccessPage />,
   },
+  {
+    path: "/",
+    element: <Navigate to="/access" />,
+  },
 ]);
+
+const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <NextUIProvider>
       <NextThemesProvider attribute="class" defaultTheme="dark">
-        <RouterProvider router={router} />
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
       </NextThemesProvider>
     </NextUIProvider>
   </React.StrictMode>

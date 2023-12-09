@@ -118,7 +118,8 @@ export default function LayoutWrapper() {
             <DropdownMenu aria-label="Profile Actions" variant="flat">
               <DropdownItem key="profile" className="h-14 gap-2">
                 <p className="font-semibold">Signed in as</p>
-                <p className="font-semibold">{pb.authStore.model.email}</p>
+                <p className="font-semibold">mnlpaglia@gmail.com</p>
+                {/* <p className="font-semibold">{pb.authStore.model.email}</p> */}
               </DropdownItem>
               <DropdownItem key="settings">My Settings</DropdownItem>
               <DropdownItem key="team_settings">Team Settings</DropdownItem>

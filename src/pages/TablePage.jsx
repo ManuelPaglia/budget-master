@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import NextUiTable from "../components/NextUiTable";
+import NextUiTable from "../components/table/NextUiTable";
 import { pb } from "../services/pocketbase";
 
 export default function TablePage() {
@@ -7,7 +7,7 @@ export default function TablePage() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetchdata();
+    // fetchdata();
   }, []);
 
   async function fetchdata() {
@@ -71,7 +71,7 @@ export default function TablePage() {
 
   return (
     <>
-      <NextUiTable category={categories} expenses={expenses} />
+      <NextUiTable />
     </>
   );
 }

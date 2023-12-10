@@ -80,7 +80,7 @@ export default function NextUiTable() {
   }, []);
 
   const filteredItems = React.useMemo(() => {
-    console.log("update")
+    console.log("update");
     let filteredUsers = [...rows];
 
     if (hasSearchFilter) {
@@ -114,7 +114,7 @@ export default function NextUiTable() {
   const renderCell = React.useCallback(
     (expense, columnKey) => {
       const cellValue = expense[columnKey];
-      console.log("update")
+      console.log("update");
       switch (columnKey) {
         case "amount":
           return (
@@ -188,9 +188,9 @@ export default function NextUiTable() {
       });
 
       const newRows = rows.filter((row) => row.id !== id);
-      console.log(newRows)
+      console.log(newRows);
       setRows(newRows);
-      console.log(rows)
+      console.log(rows);
     } catch (error) {
       toast.error("Errore durante l' eliminazione, riprovare piu tardi", {
         style: { marginBottom: "12vh" },
@@ -200,10 +200,38 @@ export default function NextUiTable() {
 
   const handleInsertRow = (item) => {
     var updatedRows = rows;
-    updatedRows.push(item);
-    console.log(updatedRows)
+    const category = categories.find((element) => element.id === item.category);
+
+    const data = new Date(item.date);
+    const giorno = data.getDate();
+    const mese = data.getMonth() + 1;
+    const anno = data.getFullYear();
+    const dataFormattata =
+      (giorno < 10 ? "0" : "") +
+      giorno +
+      "-" +
+      (mese < 10 ? "0" : "") +
+      mese +
+      "-" +
+      anno;
+
+    const newData = {
+      id: item.id,
+      collectionId: item.collectionId,
+      collectionName: item.collectionName,
+      created: item.created,
+      updated: item.updated,
+      causal: item.causal,
+      amount: item.amount,
+      notes: item.notes,
+      category: category?.name || "",
+      date: dataFormattata,
+    };
+
+    updatedRows.push(newData);
+    console.log(updatedRows);
     setRows(updatedRows);
-    console.log(rows)
+    console.log(rows);
   };
 
   const onNextPage = React.useCallback(() => {
@@ -238,7 +266,7 @@ export default function NextUiTable() {
   }, []);
 
   const topContent = React.useMemo(() => {
-    console.log("update")
+    console.log("update");
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-center">

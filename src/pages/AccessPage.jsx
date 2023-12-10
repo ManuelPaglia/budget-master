@@ -127,7 +127,7 @@ export default function AccessPage() {
 
   useEffect(() => {
     if (pb.authStore.isValid) {
-      navigate("/home");
+      navigate("/table");
     }
   });
 

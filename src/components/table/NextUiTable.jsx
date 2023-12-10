@@ -61,7 +61,7 @@ export default function NextUiTable() {
   }, [visibleColumns]);
   var pages = 0;
 
-  useEffect(() => {}, [pages]);
+  useEffect(() => {}, [pages, rows]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +80,7 @@ export default function NextUiTable() {
   }, []);
 
   const filteredItems = React.useMemo(() => {
+    console.log("update")
     let filteredUsers = [...rows];
 
     if (hasSearchFilter) {
@@ -89,7 +90,7 @@ export default function NextUiTable() {
     }
 
     return filteredUsers;
-  }, [rows, filterValue]);
+  }, [rows.length, filterValue]);
 
   pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -113,7 +114,7 @@ export default function NextUiTable() {
   const renderCell = React.useCallback(
     (expense, columnKey) => {
       const cellValue = expense[columnKey];
-
+      console.log("update")
       switch (columnKey) {
         case "amount":
           return (
@@ -151,7 +152,7 @@ export default function NextUiTable() {
           return cellValue;
       }
     },
-    [rows]
+    [rows.length]
   );
 
   const handleInfoCell = (item) => {
@@ -166,6 +167,18 @@ export default function NextUiTable() {
     onOpen();
   };
 
+  const toastInsertRecord = (status) => {
+    if (status === "success") {
+      toast.success("Spesa inserita con successo", {
+        style: { marginBottom: "12vh" },
+      });
+    } else {
+      toast.error("Errore in creazione spesa", {
+        style: { marginBottom: "12vh" },
+      });
+    }
+  };
+
   const handleDeleteRow = async (id) => {
     setModalContent({});
     try {
@@ -175,12 +188,22 @@ export default function NextUiTable() {
       });
 
       const newRows = rows.filter((row) => row.id !== id);
+      console.log(newRows)
       setRows(newRows);
+      console.log(rows)
     } catch (error) {
       toast.error("Errore durante l' eliminazione, riprovare piu tardi", {
         style: { marginBottom: "12vh" },
       });
     }
+  };
+
+  const handleInsertRow = (item) => {
+    var updatedRows = rows;
+    updatedRows.push(item);
+    console.log(updatedRows)
+    setRows(updatedRows);
+    console.log(rows)
   };
 
   const onNextPage = React.useCallback(() => {
@@ -215,6 +238,7 @@ export default function NextUiTable() {
   }, []);
 
   const topContent = React.useMemo(() => {
+    console.log("update")
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-center">
@@ -367,8 +391,15 @@ export default function NextUiTable() {
           )}
         </TableBody>
       </Table>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        backdrop="blur"
+        size="2xl"
+      >
         <CustomModalBody
+          handleInsertRow={handleInsertRow}
+          toastInsertRecord={toastInsertRecord}
           categories={categories}
           modalContent={modalContent}
           modalType={modalType}

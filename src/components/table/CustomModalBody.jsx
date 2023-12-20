@@ -21,14 +21,14 @@ export const CustomModalBody = ({
   categories,
 }) => {
   let currentdate = new Date().toJSON();
-  const [date, setDate] = useState(currentdate);
+  const [date, setDate] = useState(currentdate.slice(0, 10));
   const [causale, setCausale] = useState("");
   const [importo, setImporto] = useState(0);
   const [categoria, setCategoria] = useState("");
   const [note, setNote] = useState("");
 
   async function onSubmit() {}
-
+console.log(currentdate)
   return (
     <ModalContent>
       {(onClose) => (
@@ -81,7 +81,14 @@ export const CustomModalBody = ({
                   label="Data"
                   placeholder="Data della spesa"
                   type="text"
-                  value={date.slice(0, 10)}
+                  onChange={(e) => {
+                    
+                    
+                    setDate(e.target.value);
+                      
+                 
+                  }}
+                  value={date}
                 />
                 <Textarea
                   label="Note"
@@ -99,12 +106,19 @@ export const CustomModalBody = ({
               <Button
                 color="primary"
                 onPress={async () => {
+                  let newDate = currentdate;
+                  try {
+                      newDate = new Date(date).toJSON();
+                  } catch (error) {
+                    newDate = currentdate;
+                  }
+                 
                   const data = {
                     causal: causale,
                     amount: importo,
                     notes: note,
                     category: categoria,
-                    date: date,
+                    date: newDate,
                   };
                   try {
                     const record = await pb.collection("expenses").create(data);
@@ -122,7 +136,7 @@ export const CustomModalBody = ({
                   causale === "" ||
                   categoria === "" ||
                   importo === 0 ||
-                  date === ""
+                  date.length < 10
                 }
               >
                 Salva

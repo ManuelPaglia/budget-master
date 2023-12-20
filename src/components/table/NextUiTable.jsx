@@ -90,7 +90,7 @@ export default function NextUiTable() {
     }
 
     return filteredUsers;
-  }, [rows.length, filterValue]);
+  }, [rows.length, filterValue, rows]);
 
   pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -152,7 +152,7 @@ export default function NextUiTable() {
           return cellValue;
       }
     },
-    [rows.length]
+    [rows.length, rows]
   );
 
   const handleInfoCell = (item) => {
@@ -338,6 +338,7 @@ export default function NextUiTable() {
     onRowsPerPageChange,
     rows.length,
     onSearchChange,
+    rows,
     hasSearchFilter,
   ]);
 
